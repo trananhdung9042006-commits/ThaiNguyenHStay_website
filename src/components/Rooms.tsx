@@ -9,7 +9,8 @@ const iconComponents: Record<string, React.FC<{ className?: string }>> = {
 
 function Rooms() {
   const { data } = useSiteData();
-  const rooms = data?.rooms || [];
+  // Chỉ hiện phòng còn trống (không bị đặt)
+  const rooms = (data?.rooms || []).filter(r => !r.is_booked);
 
   return (
     <section id="rooms" className="py-20 lg:py-24 bg-gradient-to-b from-stone-100 to-stone-200">

@@ -22,11 +22,11 @@ function AdminSidebar() {
       <div className="px-6 py-5 border-b border-white/10">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">H</span>
+            <span className="text-white font-bold text-lg">V</span>
           </div>
           <div>
-            <span className="text-white font-bold">ThaiNguyen</span>
-            <span className="text-amber-400 font-bold ml-1">Stay</span>
+            <span className="text-white font-bold">Vista</span>
+            <span className="text-amber-400 font-bold ml-1">Homestay</span>
           </div>
         </div>
         <p className="text-emerald-400 text-xs mt-1">Trang quản trị</p>

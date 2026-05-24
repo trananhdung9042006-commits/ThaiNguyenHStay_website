@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2, Save, X } from 'lucide-react';
 
 const emptyRoom: Omit<Room, 'id' | 'created_at' | 'updated_at'> = {
   name: '', price: '', capacity: '', size: '', image_url: '',
-  amenities: [], description: '', sort_order: 0, is_active: true,
+  amenities: [], description: '', sort_order: 0, is_active: true, is_booked: false,
 };
 
 function RoomsPage() {
@@ -45,6 +45,14 @@ function RoomsPage() {
     if (!confirm('Bạn chắc chắn muốn xóa phòng này?')) return;
     try { await roomsService.delete(id); addToast('success', 'Đã xóa phòng'); fetchRooms(); }
     catch { addToast('error', 'Lỗi khi xóa'); }
+  };
+
+  const handleToggleBooked = async (room: Room) => {
+    try {
+      await roomsService.update(room.id, { is_booked: !room.is_booked });
+      addToast('success', room.is_booked ? 'Phòng đã mở lại' : 'Phòng đánh dấu đã đặt');
+      fetchRooms();
+    } catch { addToast('error', 'Lỗi cập nhật'); }
   };
 
   if (loading) return <div className="animate-pulse space-y-3">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl" />)}</div>;
@@ -111,6 +119,11 @@ function RoomsPage() {
                 className="w-4 h-4 text-emerald-600 rounded" />
               <label className="text-sm text-gray-700">Hiển thị trên website</label>
             </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={editRoom.is_booked === true} onChange={e => setEditRoom({...editRoom, is_booked: e.target.checked})}
+                className="w-4 h-4 text-red-500 rounded" />
+              <label className="text-sm text-gray-700">Đã được đặt (ẩn với khách hàng)</label>
+            </div>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setEditRoom(null)} className="px-5 py-2.5 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50">Hủy</button>
               <button onClick={handleSave} disabled={saving}
@@ -146,9 +159,17 @@ function RoomsPage() {
                 <td className="px-5 py-3 text-sm text-amber-600 font-semibold">{room.price}</td>
                 <td className="px-5 py-3 text-sm text-gray-500">{room.capacity}</td>
                 <td className="px-5 py-3">
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${room.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {room.is_active ? 'Hiển thị' : 'Ẩn'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${room.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {room.is_active ? 'Hiển thị' : 'Ẩn'}
+                    </span>
+                    <button
+                      onClick={() => handleToggleBooked(room)}
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${room.is_booked ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                    >
+                      {room.is_booked ? '🔒 Đã đặt' : '✅ Còn trống'}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-5 py-3 text-right">
                   <div className="flex justify-end gap-2">

@@ -8,7 +8,6 @@ function Footer() {
   const contact = data?.contact;
 
   const footerDescription = settings?.footer_description || '';
-  const footerServices = settings?.footer_services || [];
   const socialLinks = settings?.social_links || { facebook: '#', instagram: '#', youtube: '#', tiktok: '#' };
   const address = contact?.address?.full || '';
   const phone = contact?.phone?.number || '';
@@ -17,7 +16,7 @@ function Footer() {
   return (
     <footer className="bg-emerald-950 border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -26,11 +25,11 @@ function Footer() {
           >
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">H</span>
+                <span className="text-white font-bold text-xl">V</span>
               </div>
               <div>
-                <span className="text-white font-bold text-lg">ThaiNguyen</span>
-                <span className="text-amber-400 font-bold text-lg ml-1">Stay</span>
+                <span className="text-white font-bold text-lg">Vista</span>
+                <span className="text-amber-400 font-bold text-lg ml-1">Homestay</span>
               </div>
             </div>
             <p className="text-emerald-300 text-sm leading-relaxed">{footerDescription}</p>
@@ -47,29 +46,12 @@ function Footer() {
             </div>
           </motion.div>
 
-          {/* Services */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-          >
-            <h3 className="text-white font-bold mb-4">Dịch Vụ</h3>
-            <ul className="space-y-2">
-              {footerServices.map((service, i) => (
-                <li key={i} className="text-emerald-300 text-sm hover:text-amber-400 transition-colors cursor-pointer">
-                  {service}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
           {/* Quick Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.1 }}
           >
             <h3 className="text-white font-bold mb-4">Liên Kết</h3>
             <ul className="space-y-2">
@@ -88,7 +70,7 @@ function Footer() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
           >
             <h3 className="text-white font-bold mb-4">Liên Hệ</h3>
             <div className="space-y-3">
@@ -121,7 +103,7 @@ function Footer() {
         {/* Bottom */}
         <div className="border-t border-white/10 mt-12 pt-8 text-center">
           <p className="text-emerald-400 text-sm">
-            © {new Date().getFullYear()} ThaiNguyen Stay. All rights reserved.
+            © {new Date().getFullYear()} Vista Homestay. All rights reserved.
           </p>
         </div>
       </div>

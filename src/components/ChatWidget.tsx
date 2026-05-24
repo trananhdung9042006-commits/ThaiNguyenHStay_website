@@ -104,7 +104,7 @@ function ChatWidget() {
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-sm">ThaiNguyen Stay</h3>
+                  <h3 className="text-white font-semibold text-sm">Vista Homestay</h3>
                   <p className="text-emerald-200 text-xs">Trợ lý ảo • Trực tuyến</p>
                 </div>
               </div>

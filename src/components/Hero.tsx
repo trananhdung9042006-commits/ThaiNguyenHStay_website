@@ -24,7 +24,7 @@ function Hero() {
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={bgImage} alt="ThaiNguyen Stay" className="w-full h-full object-cover" />
+        <img src={bgImage} alt="Vista Homestay" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/95 via-emerald-950/80 to-emerald-950/40" />
       </div>
 

@@ -67,6 +67,7 @@ export interface Room {
   description: string | null;
   sort_order: number;
   is_active: boolean;
+  is_booked: boolean;
   created_at: string;
   updated_at: string;
 }

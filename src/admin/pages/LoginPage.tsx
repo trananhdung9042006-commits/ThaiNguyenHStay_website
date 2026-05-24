@@ -38,10 +38,10 @@ function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">H</span>
+              <span className="text-white font-bold text-2xl">V</span>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">ThaiNguyen Stay</h1>
+          <h1 className="text-2xl font-bold text-white">Vista Homestay</h1>
           <p className="text-emerald-300 mt-1">Đăng nhập quản trị</p>
         </div>
 

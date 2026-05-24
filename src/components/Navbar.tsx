@@ -28,11 +28,11 @@ function Navbar() {
             transition={{ duration: 0.5 }}
           >
             <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">H</span>
+              <span className="text-white font-bold text-xl">V</span>
             </div>
             <div>
-              <span className="text-white font-bold text-lg">ThaiNguyen</span>
-              <span className="text-amber-400 font-bold text-lg ml-1">Stay</span>
+              <span className="text-white font-bold text-lg">Vista</span>
+              <span className="text-amber-400 font-bold text-lg ml-1">Homestay</span>
             </div>
           </motion.a>
 
