@@ -1,222 +1,166 @@
 import { motion } from 'framer-motion';
-import { Phone, MessageCircle, QrCode, Mail, Clock, MapPin, CheckCircle } from 'lucide-react';
+import { Phone, MessageCircle, QrCode, Clock, CreditCard, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { useSiteData } from '../contexts/SiteDataContext';
 
-const Contact = () => {
-  const bookingMethods = [
-    {
-      icon: Phone,
-      title: 'Gọi Điện Thoại',
-      description: 'Liên hệ trực tiếp với chúng tôi',
-      action: '0912.345.678',
-      link: 'tel:+84912345678',
-      color: 'from-green-500 to-green-600',
-      iconColor: 'text-green-600'
-    },
-    {
-      icon: MessageCircle,
-      title: 'Zalo',
-      description: 'Chat và đặt phòng qua Zalo',
-      action: '0912.345.678',
-      link: 'https://zalo.me/0912345678',
-      color: 'from-blue-500 to-blue-600',
-      iconColor: 'text-blue-600'
-    },
-    {
-      icon: QrCode,
-      title: 'Quét QR Code',
-      description: 'Quét để chuyển khoản đặt cọc',
-      action: 'MB Bank',
-      link: '#',
-      color: 'from-purple-500 to-purple-600',
-      iconColor: 'text-purple-600'
-    }
-  ];
+const policyIcons: Record<string, React.FC<{ className?: string }>> = {
+  info: Info,
+  success: CheckCircle,
+  warning: AlertTriangle,
+  danger: AlertCircle,
+};
 
-  const workingHours = [
-    { day: 'Thứ 2 - Thứ 6', hours: '08:00 - 22:00' },
-    { day: 'Thứ 7', hours: '07:00 - 23:00' },
-    { day: 'Chủ Nhật', hours: '07:00 - 23:00' },
-    { day: 'Lễ Tết', hours: '24/24' }
-  ];
+const policyColors: Record<string, string> = {
+  info: 'text-blue-500',
+  success: 'text-emerald-500',
+  warning: 'text-amber-500',
+  danger: 'text-red-500',
+};
+
+function Contact() {
+  const { data } = useSiteData();
+  const contact = data?.contact;
+
+  const subtitle = contact?.section_subtitle || 'Liên Hệ & Đặt Phòng';
+  const title = contact?.section_title || 'Đặt Phòng Nhanh Chóng';
+  const description = contact?.section_description || '';
+  const workingHours = contact?.working_hours || [];
+  const cancellationPolicy = contact?.cancellation_policy || [];
+  const bankInfo = contact?.bank_info;
 
   return (
-    <section id="contact" className="py-24 bg-gradient-to-b from-emerald-950 to-emerald-900 relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 left-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {/* Section Header */}
+    <section id="contact" className="py-20 lg:py-24 bg-gradient-to-b from-emerald-900 to-emerald-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <motion.div
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          transition={{ duration: 0.6 }}
         >
-          <span className="text-amber-400 font-semibold text-lg uppercase tracking-wider">Liên Hệ & Đặt Phòng</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mt-3 mb-4">
-            Đặt Phòng Nhanh Chóng
-          </h2>
-          <p className="text-emerald-200 text-lg max-w-2xl mx-auto">
-            Nhiều phương thức đặt phòng tiện lợi, hỗ trợ 24/7
-          </p>
+          <span className="text-amber-500 uppercase tracking-wider text-sm font-semibold">{subtitle}</span>
+          <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-white mt-3">{title}</h2>
+          {description && (
+            <p className="mt-4 text-lg text-emerald-200 max-w-2xl mx-auto">{description}</p>
+          )}
         </motion.div>
 
-        {/* Booking Methods */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {bookingMethods.map((method, index) => {
-            const Icon = method.icon;
-            return (
-              <motion.div
-                key={method.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 hover:bg-white/15 transition-all hover:scale-105"
-              >
-                <div className={`w-16 h-16 bg-gradient-to-br ${method.color} rounded-2xl flex items-center justify-center mb-6`}>
-                  <Icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-3">{method.title}</h3>
-                <p className="text-emerald-200 mb-4">{method.description}</p>
-                {method.title === 'Quét QR Code' ? (
-                  <div className="bg-white rounded-2xl p-4 mb-4">
-                    <img
-                      src="/images/qr-code.png"
-                      alt="QR Code"
-                      className="w-full h-auto"
-                    />
-                    <p className="text-center text-emerald-900 font-semibold mt-2">MB Bank</p>
-                    <p className="text-center text-emerald-700 text-sm">0123 456 789</p>
-                  </div>
-                ) : (
-                  <a
-                    href={method.link}
-                    className={`inline-flex items-center gap-2 bg-gradient-to-r ${method.color} text-white px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity`}
-                  >
-                    {method.action}
-                    {method.title === 'Gọi Điện Thoại' && <Phone className="w-4 h-4" />}
-                  </a>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Contact Info & Hours */}
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Contact Information */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Booking Methods */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8"
+            className="space-y-4"
           >
-            <h3 className="text-2xl font-bold text-white mb-6">Thông Tin Liên Hệ</h3>
-            
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-emerald-800/50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-6 h-6 text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-emerald-300 text-sm">Điện thoại</p>
-                  <a href="tel:+84912345678" className="text-white font-semibold text-lg hover:text-amber-400 transition-colors">
-                    0912.345.678
-                  </a>
-                </div>
-              </div>
+            <h3 className="text-xl font-bold text-white mb-4">Phương thức liên hệ</h3>
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-emerald-800/50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <MessageCircle className="w-6 h-6 text-amber-400" />
+            {/* Phone */}
+            {contact?.phone && (
+              <a
+                href={contact.phone.link}
+                className="flex items-center gap-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 hover:border-emerald-400/30 transition-all"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+                  <Phone className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-emerald-300 text-sm">Zalo</p>
-                  <a href="https://zalo.me/0912345678" className="text-white font-semibold text-lg hover:text-amber-400 transition-colors">
-                    0912.345.678
-                  </a>
+                  <p className="text-white font-semibold">Gọi điện</p>
+                  <p className="text-emerald-300 text-sm">{contact.phone.number}</p>
                 </div>
-              </div>
+              </a>
+            )}
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-emerald-800/50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-6 h-6 text-amber-400" />
+            {/* Zalo */}
+            {contact?.zalo && (
+              <a
+                href={contact.zalo.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 hover:border-blue-400/30 transition-all"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-emerald-300 text-sm">Email</p>
-                  <a href="mailto:booking@thainguyenstay.com" className="text-white font-semibold text-lg hover:text-amber-400 transition-colors">
-                    booking@thainguyenstay.com
-                  </a>
+                  <p className="text-white font-semibold">Zalo</p>
+                  <p className="text-emerald-300 text-sm">{contact.zalo.number}</p>
                 </div>
-              </div>
+              </a>
+            )}
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-emerald-800/50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-6 h-6 text-amber-400" />
+            {/* Bank */}
+            {bankInfo && (
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">{bankInfo.bank}</p>
+                    <p className="text-emerald-300 text-sm">{bankInfo.account}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-emerald-300 text-sm">Địa chỉ</p>
-                  <p className="text-white font-semibold">
-                    Đường Nguyễn Du, Phường Túc Duyên,<br />
-                    Thành phố Thái Nguyên, Tỉnh Thái Nguyên
-                  </p>
-                </div>
+                {bankInfo.qr_image && (
+                  <div className="mt-4 bg-white rounded-xl p-3 inline-block">
+                    <img src={bankInfo.qr_image} alt="QR Code" className="w-32 h-32" />
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </motion.div>
 
           {/* Working Hours */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8"
+            transition={{ delay: 0.1 }}
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
           >
-            <h3 className="text-2xl font-bold text-white mb-6">Giờ Hoạt Động</h3>
-            
-            <div className="space-y-4 mb-8">
-              {workingHours.map((schedule, index) => (
-                <div key={schedule.day} className="flex items-center justify-between py-3 border-b border-white/10">
-                  <span className="text-emerald-200">{schedule.day}</span>
-                  <span className="text-white font-semibold">{schedule.hours}</span>
+            <div className="flex items-center gap-3 mb-6">
+              <Clock className="w-6 h-6 text-amber-400" />
+              <h3 className="text-xl font-bold text-white">Giờ hoạt động</h3>
+            </div>
+            <div className="space-y-3">
+              {workingHours.map((wh, i) => (
+                <div key={i} className="flex justify-between items-center border-b border-white/10 pb-3 last:border-0">
+                  <span className="text-emerald-200">{wh.day}</span>
+                  <span className="text-amber-400 font-semibold">{wh.hours}</span>
                 </div>
               ))}
             </div>
+          </motion.div>
 
-            <div className="bg-amber-500/20 border border-amber-500/30 rounded-2xl p-5">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-white font-semibold mb-1">Hỗ trợ 24/7</p>
-                  <p className="text-emerald-200 text-sm">
-                    Đội ngũ hỗ trợ luôn sẵn sàng giải đáp mọi thắc mắc của quý khách
-                  </p>
-                </div>
-              </div>
+          {/* Cancellation Policy */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <QrCode className="w-6 h-6 text-amber-400" />
+              <h3 className="text-xl font-bold text-white">Chính sách đặt phòng</h3>
+            </div>
+            <div className="space-y-3">
+              {cancellationPolicy.map((rule, i) => {
+                const Icon = policyIcons[rule.type] || Info;
+                const color = policyColors[rule.type] || 'text-white';
+                return (
+                  <div key={i} className="flex items-start gap-3">
+                    <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${color}`} />
+                    <p className="text-emerald-200 text-sm">{rule.rule}</p>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         </div>
-
-        {/* Booking Note */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-3xl p-8 text-center"
-        >
-          <h3 className="text-2xl font-bold text-emerald-950 mb-3">Đặt Cọc & Hủy Phòng</h3>
-          <p className="text-emerald-900 max-w-3xl mx-auto">
-            • Đặt cọc 30% giá trị phòng để xác nhận đặt phòng<br />
-            • Hủy phòng trước 48 giờ: hoàn lại 100% tiền cọc<br />
-            • Hủy phòng trước 24 giờ: hoàn lại 50% tiền cọc<br />
-            • Hủy phòng dưới 24 giờ: không hoàn tiền cọc
-          </p>
-        </motion.div>
       </div>
     </section>
   );
-};
+}
 
 export default Contact;
