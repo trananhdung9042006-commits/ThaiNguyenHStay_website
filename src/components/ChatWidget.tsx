@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Sparkles, Phone, MapPin, RotateCcw } from 'lucide-react';
 import { chatbotService } from '../services/chatbot.service';
 import { useSiteData } from '../contexts/SiteDataContext';
 import type { ChatMessage, ChatbotConfig } from '../types';
@@ -11,7 +11,9 @@ function ChatWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<ChatbotConfig | null>(null);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { data } = useSiteData();
 
   // Load config
@@ -22,9 +24,16 @@ function ChatWidget() {
   // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, loading]);
 
-  // Add welcome message when opened
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [isOpen]);
+
+  // Add welcome message when first opened
   useEffect(() => {
     if (isOpen && messages.length === 0 && config?.welcome_message) {
       setMessages([{
@@ -37,54 +46,176 @@ function ChatWidget() {
 
   const buildContext = useCallback(() => {
     if (!data) return '';
-    const rooms = data.rooms.map(r => `${r.name}: ${r.price}/đêm, ${r.capacity}, ${r.size}`).join('\n');
-    const amenities = data.amenities.map(a => a.title).join(', ');
+
+    const availableRooms = data.rooms.filter(r => !r.is_booked);
+    const bookedRooms = data.rooms.filter(r => r.is_booked);
+
+    const roomInfo = availableRooms.map(r =>
+      `- ${r.name}: ${r.price}/đêm, ${r.capacity}, ${r.size}, tiện nghi: ${(r.amenities || []).join(', ')}`
+    ).join('\n');
+
+    const bookedInfo = bookedRooms.length > 0
+      ? `\n\nPhòng đã hết (ĐÃ ĐẶT - KHÔNG CÒN TRỐNG):\n${bookedRooms.map(r => `- ${r.name}`).join('\n')}`
+      : '';
+
+    const amenityInfo = data.amenities.map(a => `- ${a.title}: ${a.description}`).join('\n');
+
     const address = data.location?.address || '';
     const phone = data.contact?.phone?.number || '';
-    return `Phòng:\n${rooms}\n\nTiện ích: ${amenities}\nĐịa chỉ: ${address}\nĐiện thoại: ${phone}`;
+    const zalo = data.contact?.zalo?.number || '';
+    const email = data.contact?.email?.address || '';
+    const bankInfo = data.contact?.bank_info
+      ? `Ngân hàng: ${data.contact.bank_info.bank}, STK: ${data.contact.bank_info.account}`
+      : '';
+
+    const workingHours = (data.contact?.working_hours || [])
+      .map(wh => `${wh.day}: ${wh.hours}`).join(', ');
+
+    const bookingMethods = (data.contact?.booking_methods || [])
+      .map(bm => `- ${bm.title}: ${bm.detail}`).join('\n');
+
+    const cancellation = (data.contact?.cancellation_policy || [])
+      .map(cp => `- ${cp.rule}`).join('\n');
+
+    const attractions = (data.attractions || [])
+      .map(a => `- ${a.name}: ${a.distance}, ${a.travel_time}`).join('\n');
+
+    return `
+=== THÔNG TIN VISTA HOMESTAY ===
+
+📍 Địa chỉ: ${address}
+📞 Điện thoại: ${phone}
+💬 Zalo: ${zalo}
+📧 Email: ${email}
+🕐 Giờ làm việc: ${workingHours}
+
+=== PHÒNG CÒN TRỐNG ===
+${roomInfo || 'Hiện chưa có thông tin phòng'}
+${bookedInfo}
+
+=== TIỆN ÍCH ===
+${amenityInfo || 'Đầy đủ tiện nghi'}
+
+=== CÁCH ĐẶT PHÒNG ===
+${bookingMethods || 'Liên hệ trực tiếp'}
+
+=== CHÍNH SÁCH HỦY PHÒNG ===
+${cancellation || 'Liên hệ để biết thêm'}
+
+=== THANH TOÁN ===
+${bankInfo || 'Liên hệ để biết thêm'}
+
+=== ĐIỂM THAM QUAN LÂN CẬN ===
+${attractions || 'Nhiều điểm du lịch hấp dẫn'}
+`.trim();
   }, [data]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading || !config) return;
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || loading || !config) return;
 
-    const userMsg: ChatMessage = { role: 'user', content: input.trim(), timestamp: new Date().toISOString() };
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: text.trim(),
+      timestamp: new Date().toISOString(),
+    };
+
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setShowQuickReplies(false);
 
     try {
-      const reply = await chatbotService.sendMessage(input.trim(), messages, config, buildContext());
-      setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date().toISOString() }]);
+      const reply = await chatbotService.sendMessage(text.trim(), messages, config, buildContext());
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: reply,
+        timestamp: new Date().toISOString(),
+      }]);
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Xin lỗi, đã xảy ra lỗi. Vui lòng thử lại!', timestamp: new Date().toISOString() }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Xin lỗi, đã xảy ra lỗi. Vui lòng thử lại hoặc liên hệ trực tiếp qua điện thoại/Zalo!',
+        timestamp: new Date().toISOString(),
+      }]);
     } finally {
       setLoading(false);
     }
+  }, [loading, config, messages, buildContext]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
   };
 
   const handleQuickReply = (text: string) => {
-    setInput(text);
-    setTimeout(() => handleSend(), 100);
+    sendMessage(text);
+  };
+
+  const handleReset = () => {
+    setMessages([]);
+    setShowQuickReplies(true);
+    if (config?.welcome_message) {
+      setMessages([{
+        role: 'assistant',
+        content: config.welcome_message,
+        timestamp: new Date().toISOString(),
+      }]);
+    }
+  };
+
+  // Format message with line breaks and basic markdown
+  const formatMessage = (content: string) => {
+    return content.split('\n').map((line, i) => (
+      <span key={i}>
+        {line.replace(/\*\*(.*?)\*\*/g, '⟨b⟩$1⟨/b⟩').split(/⟨\/?b⟩/).map((part, j) =>
+          j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+        )}
+        {i < content.split('\n').length - 1 && <br />}
+      </span>
+    ));
   };
 
   // Don't render if chatbot is not active
   if (!config?.is_active) return null;
+
+  const quickReplies = config.quick_replies || [
+    'Xem phòng & giá',
+    'Cách đặt phòng?',
+    'Vị trí & đường đi',
+    'Thanh toán',
+  ];
 
   return (
     <>
       {/* Floating Button */}
       <AnimatePresence>
         {!isOpen && (
-          <motion.button
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="fixed bottom-6 right-6 z-50"
           >
-            <MessageCircle className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full animate-pulse" />
-          </motion.button>
+            {/* Pulse ring */}
+            <div className="absolute inset-0 w-14 h-14 bg-emerald-500/30 rounded-full animate-ping" />
+            <button
+              onClick={() => setIsOpen(true)}
+              className="relative w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-full shadow-2xl shadow-emerald-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+            >
+              <MessageCircle className="w-6 h-6" />
+            </button>
+
+            {/* Tooltip */}
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 2 }}
+              className="absolute bottom-2 right-[72px] bg-white text-gray-700 text-sm font-medium px-4 py-2 rounded-xl shadow-lg whitespace-nowrap border border-gray-100"
+            >
+              💬 Cần hỗ trợ?
+              <div className="absolute top-1/2 -translate-y-1/2 right-[-6px] w-3 h-3 bg-white border-r border-b border-gray-100 rotate-[-45deg]" />
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -92,106 +223,168 @@ function ChatWidget() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            exit={{ opacity: 0, y: 30, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl shadow-2xl shadow-black/20 overflow-hidden border border-white/10"
+            style={{ background: 'linear-gradient(180deg, #0d1520 0%, #111827 100%)' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-5 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+            <div className="relative px-5 py-4 flex items-center justify-between border-b border-white/[0.06]">
+              {/* Gradient glow */}
+              <div className="absolute inset-x-0 -top-20 h-32 bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none" />
+
+              <div className="relative flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-11 h-11 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  {/* Online dot */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0d1520]" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-sm">Vista Homestay</h3>
-                  <p className="text-emerald-200 text-xs">Trợ lý ảo • Trực tuyến</p>
+                  <h3 className="text-white font-bold text-sm tracking-tight">Vista Homestay AI</h3>
+                  <p className="text-emerald-400/70 text-xs font-medium">Trợ lý tư vấn • Trực tuyến</p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="relative flex items-center gap-1">
+                <button
+                  onClick={handleReset}
+                  className="text-gray-500 hover:text-gray-300 p-2 rounded-lg hover:bg-white/[0.06] transition-colors"
+                  title="Bắt đầu lại"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-500 hover:text-gray-300 p-2 rounded-lg hover:bg-white/[0.06] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
               {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
                   {msg.role === 'assistant' && (
-                    <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-4 h-4 text-emerald-600" />
+                    <div className="w-7 h-7 bg-emerald-500/15 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                      <Bot className="w-3.5 h-3.5 text-emerald-400" />
                     </div>
                   )}
-                  <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  <div className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-emerald-600 text-white rounded-tr-sm'
-                      : 'bg-white text-gray-700 shadow-sm rounded-tl-sm'
+                      ? 'bg-emerald-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-emerald-500/10'
+                      : 'bg-white/[0.06] text-gray-200 rounded-2xl rounded-bl-md border border-white/[0.06]'
                   }`}>
-                    {msg.content}
+                    {msg.role === 'assistant' ? formatMessage(msg.content) : msg.content}
                   </div>
                   {msg.role === 'user' && (
-                    <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <User className="w-4 h-4 text-white" />
+                    <div className="w-7 h-7 bg-emerald-600/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                      <User className="w-3.5 h-3.5 text-emerald-300" />
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
 
               {/* Typing indicator */}
               {loading && (
-                <div className="flex gap-2">
-                  <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-emerald-600" />
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-2.5"
+                >
+                  <div className="w-7 h-7 bg-emerald-500/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
-                  <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm">
-                    <div className="flex gap-1.5">
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="bg-white/[0.06] px-4 py-3 rounded-2xl rounded-bl-md border border-white/[0.06]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="text-emerald-400/50 text-xs ml-2">Đang soạn...</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               <div ref={messagesEndRef} />
             </div>
 
             {/* Quick Replies */}
-            {messages.length <= 1 && config.quick_replies && config.quick_replies.length > 0 && (
-              <div className="px-4 py-2 flex flex-wrap gap-2 border-t border-gray-100 bg-white">
-                {config.quick_replies.map((text, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleQuickReply(text)}
-                    className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-100 transition-colors"
-                  >
-                    {text}
-                  </button>
-                ))}
+            <AnimatePresence>
+              {showQuickReplies && messages.length <= 1 && quickReplies.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-4 py-2.5 border-t border-white/[0.06] bg-white/[0.02]"
+                >
+                  <p className="text-[11px] text-gray-500 mb-2 font-medium uppercase tracking-wider">Gợi ý nhanh</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {quickReplies.map((text, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleQuickReply(text)}
+                        className="text-xs bg-white/[0.06] text-emerald-300 px-3 py-2 rounded-xl border border-white/[0.08] hover:bg-emerald-500/15 hover:border-emerald-500/30 hover:text-emerald-200 transition-all duration-200"
+                      >
+                        {text}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Quick contact bar */}
+            {data?.contact && (
+              <div className="px-4 py-2 border-t border-white/[0.06] flex items-center gap-3 bg-white/[0.02]">
+                {data.contact.phone?.number && (
+                  <a href={data.contact.phone.link || `tel:${data.contact.phone.number}`}
+                    className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-emerald-400 transition-colors">
+                    <Phone className="w-3 h-3" /> {data.contact.phone.number}
+                  </a>
+                )}
+                {data.location?.address && (
+                  <span className="flex items-center gap-1.5 text-[11px] text-gray-500 truncate">
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{data.location.address.split(',').slice(0, 2).join(',')}</span>
+                  </span>
+                )}
               </div>
             )}
 
-            {/* Input */}
-            <div className="p-3 border-t border-gray-200 bg-white">
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                className="flex items-center gap-2"
-              >
+            {/* Input Area */}
+            <div className="p-3 border-t border-white/[0.06] bg-[#0a0e18]">
+              <form onSubmit={handleSubmit} className="flex items-center gap-2">
                 <input
+                  ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Nhập tin nhắn..."
-                  className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700"
+                  placeholder="Nhập câu hỏi của bạn..."
+                  className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}
-                  className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                  className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-xl flex items-center justify-center hover:shadow-lg hover:shadow-emerald-500/20 transition-all disabled:opacity-30 disabled:shadow-none active:scale-95"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </form>
+              <p className="text-center text-[10px] text-gray-600 mt-2">
+                Được hỗ trợ bởi AI • Vista Homestay
+              </p>
             </div>
           </motion.div>
         )}
