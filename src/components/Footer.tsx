@@ -25,11 +25,17 @@ function Footer() {
           >
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">V</span>
+                <span className="text-white font-bold text-xl">{(settings?.site_name || 'Vista Homestay').charAt(0)}</span>
               </div>
               <div>
-                <span className="text-white font-bold text-lg">Vista</span>
-                <span className="text-amber-400 font-bold text-lg ml-1">Homestay</span>
+                {(() => {
+                  const name = settings?.site_name || 'Vista Homestay';
+                  const parts = name.split(' ');
+                  return <>
+                    <span className="text-white font-bold text-lg">{parts[0]}</span>
+                    {parts.length > 1 && <span className="text-amber-400 font-bold text-lg ml-1">{parts.slice(1).join(' ')}</span>}
+                  </>;
+                })()}
               </div>
             </div>
             <p className="text-emerald-300 text-sm leading-relaxed">{footerDescription}</p>
@@ -103,7 +109,7 @@ function Footer() {
         {/* Bottom */}
         <div className="border-t border-white/10 mt-12 pt-8 text-center">
           <p className="text-emerald-400 text-sm">
-            © {new Date().getFullYear()} Vista Homestay. All rights reserved.
+            © {new Date().getFullYear()} {settings?.site_name || 'Vista Homestay'}. All rights reserved.
           </p>
         </div>
       </div>

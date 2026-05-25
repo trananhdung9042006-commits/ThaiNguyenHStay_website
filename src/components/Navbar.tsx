@@ -28,11 +28,17 @@ function Navbar() {
             transition={{ duration: 0.5 }}
           >
             <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">V</span>
+              <span className="text-white font-bold text-xl">{(data?.settings?.site_name || 'Vista Homestay').charAt(0)}</span>
             </div>
             <div>
-              <span className="text-white font-bold text-lg">Vista</span>
-              <span className="text-amber-400 font-bold text-lg ml-1">Homestay</span>
+              {(() => {
+                const name = data?.settings?.site_name || 'Vista Homestay';
+                const parts = name.split(' ');
+                return <>
+                  <span className="text-white font-bold text-lg">{parts[0]}</span>
+                  {parts.length > 1 && <span className="text-amber-400 font-bold text-lg ml-1">{parts.slice(1).join(' ')}</span>}
+                </>;
+              })()}
             </div>
           </motion.a>
 
