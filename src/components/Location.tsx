@@ -62,16 +62,16 @@ function Location() {
 
             {/* Embedded Map */}
             {location?.map_embed_url && (
-              <div className="mt-6 rounded-xl overflow-hidden">
+              <div className="mt-6 rounded-xl overflow-hidden shadow-md">
                 <iframe
                   src={location.map_embed_url}
                   width="100%"
-                  height="250"
+                  height="300"
                   style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Google Maps"
+                  title="Google Maps - Vista Homestay"
                 />
               </div>
             )}
