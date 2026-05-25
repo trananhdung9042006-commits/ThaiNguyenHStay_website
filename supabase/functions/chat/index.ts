@@ -68,8 +68,21 @@ QUY TẮC:
 - KHÔNG bịa thông tin không có trong dữ liệu
 - Với phòng đã đặt, nói "hiện tại phòng đã được đặt" và gợi ý phòng khác`
 
+    // Fetch Knowledge Base
+    const { data: kbData } = await supabase
+      .from('knowledge_base')
+      .select('question, answer')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+
+    let kbContext = ''
+    if (kbData && kbData.length > 0) {
+      kbContext = '\n--- KIẾN THỨC DOANH NGHIỆP (FAQ) ---\n' + 
+        kbData.map(kb => `Hỏi: ${kb.question}\nĐáp: ${kb.answer}`).join('\n\n')
+    }
+
     const systemPrompt = config.system_prompt || defaultSystemPrompt
-    const fullSystem = `${systemPrompt}\n\n--- DỮ LIỆU THỰC TẾ CỦA HOMESTAY ---\n${context}`
+    const fullSystem = `${systemPrompt}\n\n--- DỮ LIỆU THỰC TẾ CỦA HOMESTAY ---\n${context}${kbContext}`
 
     const messages = [
       { role: 'system', content: fullSystem },
