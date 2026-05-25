@@ -51,8 +51,8 @@ function ChatWidget() {
     const bookedRooms = data.rooms.filter(r => r.is_booked);
 
     const roomInfo = availableRooms.map(r =>
-      `- ${r.name}: ${r.price}/đêm, ${r.capacity}, ${r.size}, tiện nghi: ${(r.amenities || []).join(', ')}`
-    ).join('\n');
+      `- ${r.name}: ${r.price}/đêm, Sức chứa: ${r.capacity}, Diện tích: ${r.size}\n  Mô tả: ${r.description || 'Không có'}\n  Tiện nghi: ${(r.amenities || []).join(', ')}`
+    ).join('\n\n');
 
     const bookedInfo = bookedRooms.length > 0
       ? `\n\nPhòng đã hết (ĐÃ ĐẶT - KHÔNG CÒN TRỐNG):\n${bookedRooms.map(r => `- ${r.name}`).join('\n')}`
@@ -65,7 +65,7 @@ function ChatWidget() {
     const zalo = data.contact?.zalo?.number || '';
     const email = data.contact?.email?.address || '';
     const bankInfo = data.contact?.bank_info
-      ? `Ngân hàng: ${data.contact.bank_info.bank}, STK: ${data.contact.bank_info.account}`
+      ? `Ngân hàng: ${data.contact.bank_info.bank}, STK: ${data.contact.bank_info.account}, Chủ TK: ${data.contact.bank_info.name || ''}`
       : '';
 
     const workingHours = (data.contact?.working_hours || [])
@@ -78,10 +78,22 @@ function ChatWidget() {
       .map(cp => `- ${cp.rule}`).join('\n');
 
     const attractions = (data.attractions || [])
-      .map(a => `- ${a.name}: ${a.distance}, ${a.travel_time}`).join('\n');
+      .map(a => `- ${a.name}: Cách ${a.distance}, di chuyển khoảng ${a.travel_time}`).join('\n');
+
+    const heroTitle = [data.hero?.title_line1, data.hero?.title_line2].filter(Boolean).join(' ');
+    const heroDesc = data.hero?.description || '';
+    const heroFeatures = (data.hero?.features || []).map(f => f.label).join(', ');
+
+    const siteName = data.settings?.site_name || 'Vista Homestay';
+    const siteTagline = data.settings?.site_tagline || '';
+    const seoDesc = data.settings?.seo_description || '';
 
     return `
-=== THÔNG TIN VISTA HOMESTAY ===
+=== THÔNG TIN ${siteName.toUpperCase()} ===
+Slogan: ${siteTagline}
+Mô tả chung: ${seoDesc}
+Giới thiệu (Hero): ${heroTitle} - ${heroDesc}
+Điểm nổi bật: ${heroFeatures}
 
 📍 Địa chỉ: ${address}
 📞 Điện thoại: ${phone}
@@ -93,7 +105,7 @@ function ChatWidget() {
 ${roomInfo || 'Hiện chưa có thông tin phòng'}
 ${bookedInfo}
 
-=== TIỆN ÍCH ===
+=== TIỆN ÍCH DỊCH VỤ ===
 ${amenityInfo || 'Đầy đủ tiện nghi'}
 
 === CÁCH ĐẶT PHÒNG ===
