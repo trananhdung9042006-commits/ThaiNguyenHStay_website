@@ -115,38 +115,18 @@ export const chatbotService = {
       return this.fallbackResponse(message, context);
     }
 
-    // 3. Call AI API
+    // 3. Call AI API via Supabase Edge Function
     try {
-      const defaultSystemPrompt = `Bạn là trợ lý tư vấn AI của Vista Homestay — một homestay đẳng cấp tại Thái Nguyên, Việt Nam.
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { message, history, context }
+      });
 
-NHIỆM VỤ:
-- Tư vấn khách hàng về phòng, giá cả, tiện ích, vị trí, cách đặt phòng
-- Trả lời thân thiện, ngắn gọn, chuyên nghiệp bằng tiếng Việt
-- Gợi ý phòng phù hợp dựa trên nhu cầu khách
-- Hướng dẫn đặt phòng, thanh toán, chính sách hủy
-- Nếu không biết câu trả lời, hãy hướng dẫn khách liên hệ trực tiếp qua điện thoại/Zalo
-
-QUY TẮC:
-- Luôn trả lời bằng tiếng Việt
-- Ngắn gọn, tối đa 3-4 câu cho mỗi câu trả lời trừ khi khách hỏi chi tiết
-- Sử dụng emoji phù hợp để tạo cảm giác thân thiện
-- Khi giới thiệu phòng, nêu rõ giá, sức chứa, diện tích
-- Nếu khách muốn đặt phòng, hướng dẫn liên hệ qua điện thoại hoặc Zalo
-- KHÔNG bịa thông tin không có trong dữ liệu
-- Với phòng đã đặt, nói "hiện tại phòng đã được đặt" và gợi ý phòng khác`;
-
-      const systemPrompt = config.system_prompt || defaultSystemPrompt;
-      const fullSystem = `${systemPrompt}\n\n--- DỮ LIỆU THỰC TẾ CỦA HOMESTAY ---\n${context}`;
-
-      const aiMessages = [
-        { role: 'system' as const, content: fullSystem },
-        ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
-        { role: 'user' as const, content: message },
-      ];
-
-      return await this.callAIProvider(aiMessages, config);
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      
+      return data?.reply || this.fallbackResponse(message, context);
     } catch (err) {
-      console.error('AI API error:', err);
+      console.error('Edge function error:', err);
       return this.fallbackResponse(message, context);
     }
   },
@@ -194,97 +174,7 @@ QUY TẮC:
     return null;
   },
 
-  async callAIProvider(
-    messages: { role: string; content: string }[],
-    config: ChatbotConfig
-  ): Promise<string> {
-    const endpoint = config.api_endpoint || PROVIDER_ENDPOINTS[config.api_provider];
-    if (!endpoint) throw new Error(`Unknown provider: ${config.api_provider}`);
-
-    // Anthropic has a different API format
-    if (config.api_provider === 'anthropic') {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': config.api_key_encrypted,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: config.model,
-          max_tokens: config.max_tokens,
-          temperature: config.temperature,
-          system: messages.find(m => m.role === 'system')?.content || '',
-          messages: messages.filter(m => m.role !== 'system'),
-        }),
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Anthropic API error ${response.status}: ${errText}`);
-      }
-      const data = await response.json();
-      return data.content?.[0]?.text || 'Không có phản hồi.';
-    }
-
-    // Gemini - use native Gemini API (more reliable than OpenAI-compatible)
-    if (config.api_provider === 'gemini') {
-      const model = config.model || 'gemini-2.0-flash';
-      const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.api_key_encrypted}`;
-
-      // Convert messages to Gemini format
-      const systemInstruction = messages.find(m => m.role === 'system')?.content || '';
-      const contents = messages
-        .filter(m => m.role !== 'system')
-        .map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        }));
-
-      const response = await fetch(geminiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents,
-          generationConfig: {
-            temperature: config.temperature,
-            maxOutputTokens: config.max_tokens,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Gemini API error ${response.status}: ${errText}`);
-      }
-
-      const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Không có phản hồi.';
-    }
-
-    // OpenAI-compatible (OpenAI, Groq, Custom)
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.api_key_encrypted}`,
-      },
-      body: JSON.stringify({
-        model: config.model,
-        messages,
-        max_tokens: config.max_tokens,
-        temperature: config.temperature,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`AI API error ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || 'Không có phản hồi.';
-  },
+  // Deprecated: Direct provider calls moved to Edge Function
+  // keeping method signature empty or removed to avoid TS errors
+  // (We removed the callAIProvider method entirely)
 };
