@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Bot, User, Sparkles, Phone, MapPin, RotateCcw } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Sparkles, Phone, MapPin, RotateCcw, Maximize2, Minimize2 } from 'lucide-react';
 import { chatbotService } from '../services/chatbot.service';
 import { useSiteData } from '../contexts/SiteDataContext';
 import type { ChatMessage, ChatbotConfig } from '../types';
 
 function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -239,7 +240,11 @@ ${attractions || 'Nhiều điểm du lịch hấp dẫn'}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl shadow-2xl shadow-black/20 overflow-hidden border border-white/10"
+            className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col rounded-2xl shadow-2xl shadow-black/20 overflow-hidden border border-white/10 transition-all duration-300 ${
+              isExpanded 
+                ? 'w-[calc(100vw-2rem)] md:w-[50vw] h-[calc(100vh-3rem)] md:h-[85vh]' 
+                : 'w-[360px] sm:w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)]'
+            }`}
             style={{ background: 'linear-gradient(180deg, #0d1520 0%, #111827 100%)' }}
           >
             {/* Header */}
@@ -270,8 +275,16 @@ ${attractions || 'Nhiều điểm du lịch hấp dẫn'}
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-gray-500 hover:text-gray-300 p-2 rounded-lg hover:bg-white/[0.06] transition-colors hidden sm:block"
+                  title={isExpanded ? "Thu nhỏ" : "Phóng to"}
+                >
+                  {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+                <button
                   onClick={() => setIsOpen(false)}
                   className="text-gray-500 hover:text-gray-300 p-2 rounded-lg hover:bg-white/[0.06] transition-colors"
+                  title="Đóng"
                 >
                   <X className="w-4 h-4" />
                 </button>
