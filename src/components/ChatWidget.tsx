@@ -188,6 +188,15 @@ ${attractions || 'Nhiều điểm du lịch hấp dẫn'}
     ));
   };
 
+  const extractSuggestions = (text: string) => {
+    const match = text.match(/\[GỢI Ý:\s*(.*?)\]/i);
+    if (!match) return { text, suggestions: [] };
+    
+    const suggestions = match[1].split('|').map(s => s.trim()).filter(Boolean);
+    const cleanText = text.replace(/\[GỢI Ý:.*?\]/gi, '').trim();
+    return { text: cleanText, suggestions };
+  };
+
   // Don't render if chatbot is not active
   if (!config?.is_active) return null;
 
@@ -293,7 +302,13 @@ ${attractions || 'Nhiều điểm du lịch hấp dẫn'}
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
-              {messages.map((msg, i) => (
+              {messages.map((msg, i) => {
+                const { text, suggestions } = msg.role === 'assistant' 
+                  ? extractSuggestions(msg.content) 
+                  : { text: msg.content, suggestions: [] };
+                const isLast = i === messages.length - 1;
+
+                return (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 8 }}
@@ -306,12 +321,28 @@ ${attractions || 'Nhiều điểm du lịch hấp dẫn'}
                       <Bot className="w-3.5 h-3.5 text-emerald-400" />
                     </div>
                   )}
-                  <div className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-emerald-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-emerald-500/10'
-                      : 'bg-white/[0.06] text-gray-200 rounded-2xl rounded-bl-md border border-white/[0.06]'
-                  }`}>
-                    {msg.role === 'assistant' ? formatMessage(msg.content) : msg.content}
+                  <div className={`max-w-[80%] flex flex-col gap-2`}>
+                    <div className={`px-4 py-3 text-sm leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-emerald-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-emerald-500/10'
+                        : 'bg-white/[0.06] text-gray-200 rounded-2xl rounded-bl-md border border-white/[0.06]'
+                    }`}>
+                      {msg.role === 'assistant' ? formatMessage(text) : text}
+                    </div>
+
+                    {isLast && msg.role === 'assistant' && suggestions.length > 0 && !loading && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {suggestions.map((s, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleQuickReply(s)}
+                            className="text-[11px] bg-emerald-500/10 text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors text-left"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {msg.role === 'user' && (
                     <div className="w-7 h-7 bg-emerald-600/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
@@ -319,7 +350,7 @@ ${attractions || 'Nhiều điểm du lịch hấp dẫn'}
                     </div>
                   )}
                 </motion.div>
-              ))}
+              )})}
 
               {/* Typing indicator */}
               {loading && (
